@@ -3,6 +3,7 @@ package api.dto.member;
 import com.pfairplay.mysql.core.entity.Gender;
 import com.pfairplay.mysql.core.entity.Member;
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -12,6 +13,7 @@ import java.util.List;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class SignInDto {
 
     @NotBlank(message = "이름을 작성해 주세요.")
