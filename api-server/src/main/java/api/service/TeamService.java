@@ -1,14 +1,12 @@
 package api.service;
 
 
-import api.common.exception.CustomErrorEnum;
-import api.common.exception.CustomException;
+import api.common.exception.custom.SourceNotFoundException;
 import api.dto.team.CreateTeamDto;
 import api.dto.team.TeamDto;
 import com.pfairplay.mysql.core.entity.Team;
 import com.pfairplay.mysql.core.repository.team.TeamRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,7 +28,7 @@ public class TeamService {
 
     public TeamDto findTeamById(Long id) {
         Team foundTeam = teamRepository.findById(id)
-                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, CustomErrorEnum.SOURCE_NOT_FOUND));
+                .orElseThrow(SourceNotFoundException::new);
 
         return TeamDto.fromEntity(foundTeam);
 
