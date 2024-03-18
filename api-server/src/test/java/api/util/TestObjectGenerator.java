@@ -5,7 +5,7 @@ import api.dto.member.SignInDto;
 import com.pfairplay.mysql.core.entity.Gender;
 import com.pfairplay.mysql.core.entity.Member;
 
-public class TestEntityGenerator {
+public class TestObjectGenerator {
 
     public static Member generateTestMemberEntity() {
         Member member = new Member();

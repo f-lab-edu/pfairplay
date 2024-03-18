@@ -4,7 +4,7 @@ import api.common.exception.custom.DuplicateKeyException;
 import api.dto.member.MemberDto;
 import api.dto.member.SignInDto;
 import api.service.MemberService;
-import api.util.TestEntityGenerator;
+import api.util.TestObjectGenerator;
 import com.pfairplay.mysql.core.entity.Member;
 import com.pfairplay.mysql.core.repository.member.MemberRepository;
 import org.junit.jupiter.api.Assertions;
@@ -33,8 +33,8 @@ public class MemberServiceUnitTest {
     @Test
     public void succeedToSignIn() {
         // given
-        Member member = TestEntityGenerator.generateTestMemberEntity();
-        SignInDto signInDto = TestEntityGenerator.generateTestSignInDto();
+        Member member = TestObjectGenerator.generateTestMemberEntity();
+        SignInDto signInDto = TestObjectGenerator.generateTestSignInDto();
 
         when(memberRepository.save(any(Member.class))).thenReturn(member);
 
@@ -48,8 +48,8 @@ public class MemberServiceUnitTest {
     @Test
     public void failedToSignInByDuplicatePhoneNumber() {
         // given
-        Member member = TestEntityGenerator.generateTestMemberEntity();
-        SignInDto signInDto = TestEntityGenerator.generateTestSignInDto();
+        Member member = TestObjectGenerator.generateTestMemberEntity();
+        SignInDto signInDto = TestObjectGenerator.generateTestSignInDto();
         when(memberRepository.findByPhoneNumber(any(String.class))).thenReturn(Optional.of(member));
 
         // when
