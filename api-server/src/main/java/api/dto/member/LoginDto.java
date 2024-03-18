@@ -1,14 +1,14 @@
 package api.dto.member;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(force = true)
+@RequiredArgsConstructor
 public class LoginDto {
 
-    private String phoneNumber;
+    private final String phoneNumber;
 
 }
