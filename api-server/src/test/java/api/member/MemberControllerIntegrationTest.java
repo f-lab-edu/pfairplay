@@ -1,23 +1,25 @@
 package api.member;
 
 import api.dto.member.LoginDto;
+import api.dto.member.MemberDto;
 import api.dto.member.SignInDto;
 import api.dto.member.UpdateMemberDto;
 import api.util.JsonConverter;
+import api.util.TestObjectGenerator;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
+import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 @SpringBootTest
@@ -35,105 +37,69 @@ public class MemberControllerIntegrationTest {
     @Test
     public void succeedToSignIn() throws Exception {
         // given
-        SignInDto signInDto = new SignInDto(
-                "testName",
-                "testNickName",
-                "2024-01-01",
-                "010-1234-5678",
-                null,
-                null
-        );
+        SignInDto signInDto = TestObjectGenerator.generateTestSignInDto();
+
 
         // when
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders
-                .post("/api/members/sign-in")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(JsonConverter.toJsonString(signInDto)));
+        MockHttpServletResponse signInResponse = mockMvc.perform(MockMvcRequestBuilders
+                        .post("/api/members/sign-in")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JsonConverter.toJsonString(signInDto)))
+                .andReturn()
+                .getResponse();
 
         // then
-        resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers
-                        .jsonPath("$.phoneNumber").value("010-1234-5678")
-                );
-
-
+        MemberDto memberDto = JsonConverter.parseJsonString(signInResponse.getContentAsString(), MemberDto.class);
+        assertEquals(HttpStatus.OK.value(), signInResponse.getStatus());
+        assertEquals(signInDto.getPhoneNumber(), memberDto.getPhoneNumber());
     }
 
     @Test
     public void failedToSignInByDuplicatedPhoneNumber() throws Exception {
         // given
-        SignInDto signInDto = new SignInDto(
-                "testName",
-                "testNickName",
-                "2024-01-01",
-                "010-1234-5678",
-                null,
-                null
-        );
-
-        SignInDto duplicatedPhoneNumberSignInDto = new SignInDto(
-                "testName",
-                "testNickName",
-                "2024-01-01",
-                "010-1234-5678",
-                null,
-                null
-        );
+        SignInDto signInDto = TestObjectGenerator.generateTestSignInDto();
+        SignInDto duplicatedPhoneNumberSignInDto = TestObjectGenerator.generateTestSignInDto();
 
         // when
-        ResultActions succeedResultActions = mockMvc.perform(MockMvcRequestBuilders
+        mockMvc.perform(MockMvcRequestBuilders
                 .post("/api/members/sign-in")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(JsonConverter.toJsonString(signInDto)));
 
-        ResultActions failResultActions = mockMvc.perform(MockMvcRequestBuilders
-                .post("/api/members/sign-in")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(JsonConverter.toJsonString(duplicatedPhoneNumberSignInDto)));
+        MockHttpServletResponse expectedFailSignInResponse = mockMvc.perform(MockMvcRequestBuilders
+                        .post("/api/members/sign-in")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JsonConverter.toJsonString(duplicatedPhoneNumberSignInDto)))
+                .andReturn()
+                .getResponse();
 
         // then
-        succeedResultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers
-                        .jsonPath("$.phoneNumber").value("010-1234-5678")
-                );
-
-        failResultActions
-                .andExpect(MockMvcResultMatchers.status().is(HttpStatus.CONFLICT.value()));
+        assertEquals(HttpStatus.CONFLICT.value(), expectedFailSignInResponse.getStatus());
 
     }
 
     @Test
     public void succeedToSignOut() throws Exception {
         // given
-        SignInDto signInDto = new SignInDto(
-                "testName",
-                "testNickName",
-                "2024-01-01",
-                "010-1234-5678",
-                null,
-                null
-        );
+        SignInDto signInDto = TestObjectGenerator.generateTestSignInDto();
 
         // when
-        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders
+        MockHttpServletResponse signInResponse = mockMvc.perform(MockMvcRequestBuilders
                         .post("/api/members/sign-in")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(JsonConverter.toJsonString(signInDto)))
-                .andReturn();
+                .andReturn()
+                .getResponse();
+        MemberDto savedMemberDto = JsonConverter.parseJsonString(signInResponse.getContentAsString(), MemberDto.class);
 
-        String savedMemberId = JsonConverter.toJsonNode(mvcResult.getResponse().getContentAsString())
-                .get("id")
-                .asText();
-
-        ResultActions signOutResultActions = mockMvc.perform(MockMvcRequestBuilders
-                .post(String.format("/api/members/%s/sign-out", savedMemberId))
-                .contentType(MediaType.APPLICATION_JSON));
+        MockHttpServletResponse signOutResponse = mockMvc.perform(MockMvcRequestBuilders
+                        .post(String.format("/api/members/%s/sign-out", savedMemberDto.getId()))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andReturn()
+                .getResponse();
 
         // then
-        signOutResultActions
-                .andExpect(MockMvcResultMatchers.status().isOk());
+        assertEquals(HttpStatus.OK.value(), signOutResponse.getStatus());
 
     }
 
@@ -143,44 +109,40 @@ public class MemberControllerIntegrationTest {
         String nonExistedId = "nonExistedId";
 
         // when
-        ResultActions signOutResultActions = mockMvc.perform(MockMvcRequestBuilders
-                .post(String.format("/api/members/%s/sign-out", nonExistedId))
-                .contentType(MediaType.APPLICATION_JSON));
+        MockHttpServletResponse signOutResponse = mockMvc.perform(MockMvcRequestBuilders
+                        .post(String.format("/api/members/%s/sign-out", nonExistedId))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andReturn()
+                .getResponse();
 
         // then
-        signOutResultActions
-                .andExpect(MockMvcResultMatchers.status().is(HttpStatus.NOT_FOUND.value()));
+        assertEquals(HttpStatus.NOT_FOUND.value(), signOutResponse.getStatus());
 
     }
 
     @Test
     public void succeedToLogIn() throws Exception {
         // given
-        SignInDto signInDto = new SignInDto(
-                "testName",
-                "testNickName",
-                "2024-01-01",
-                "010-1234-5678",
-                null,
-                null
-        );
-
-        LoginDto loginDto = new LoginDto("010-1234-5678");
+        SignInDto signInDto = TestObjectGenerator.generateTestSignInDto();
+        LoginDto loginDto = new LoginDto(signInDto.getPhoneNumber());
 
         // when
-        ResultActions signInResultActions = mockMvc.perform(MockMvcRequestBuilders
-                .post("/api/members/sign-in")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(JsonConverter.toJsonString(signInDto)));
+        mockMvc.perform(MockMvcRequestBuilders
+                        .post("/api/members/sign-in")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JsonConverter.toJsonString(signInDto)))
+                .andReturn()
+                .getResponse();
 
-        ResultActions logInResultActions = mockMvc.perform(MockMvcRequestBuilders
-                .post("/api/members/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(JsonConverter.toJsonString(loginDto)));
+        MockHttpServletResponse logInResponse = mockMvc.perform(MockMvcRequestBuilders
+                        .post("/api/members/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JsonConverter.toJsonString(loginDto)))
+                .andReturn()
+                .getResponse();
 
         // then
-        logInResultActions
-                .andExpect(MockMvcResultMatchers.status().isOk());
+        assertEquals(HttpStatus.OK.value(), logInResponse.getStatus());
 
     }
 
@@ -190,50 +152,44 @@ public class MemberControllerIntegrationTest {
         LoginDto loginDto = new LoginDto("nonExistedPhoneNumber");
 
         // when
-        ResultActions logInResultActions = mockMvc.perform(MockMvcRequestBuilders
-                .post("/api/members/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(JsonConverter.toJsonString(loginDto)));
+        MockHttpServletResponse logInResponse = mockMvc.perform(MockMvcRequestBuilders
+                        .post("/api/members/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JsonConverter.toJsonString(loginDto)))
+                .andReturn()
+                .getResponse();
 
         // then
-        logInResultActions
-                .andExpect(MockMvcResultMatchers.status().is(HttpStatus.NOT_FOUND.value()));
+        assertEquals(HttpStatus.NOT_FOUND.value(), logInResponse.getStatus());
 
     }
 
     @Test
     public void succeedToLogout() throws Exception {
         // given
-        SignInDto signInDto = new SignInDto(
-                "testName",
-                "testNickName",
-                "2024-01-01",
-                "010-1234-5678",
-                null,
-                null
-        );
+        SignInDto signInDto = TestObjectGenerator.generateTestSignInDto();
 
-        LoginDto loginDto = new LoginDto("010-1234-5678");
+        LoginDto loginDto = new LoginDto(signInDto.getPhoneNumber());
 
         // when
-        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders
+        MockHttpServletResponse signInResponse = mockMvc.perform(MockMvcRequestBuilders
                         .post("/api/members/sign-in")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(JsonConverter.toJsonString(signInDto)))
-                .andReturn();
+                .andReturn()
+                .getResponse();
 
-        String savedMemberId = JsonConverter.toJsonNode(mvcResult.getResponse().getContentAsString())
-                .get("id")
-                .asText();
+        MemberDto savedMemberDto = JsonConverter.parseJsonString(signInResponse.getContentAsString(), MemberDto.class);
 
-        ResultActions logoutResultActions = mockMvc.perform(MockMvcRequestBuilders
-                .post(String.format("/api/members/%s/logout", savedMemberId))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(JsonConverter.toJsonString(loginDto)));
+        MockHttpServletResponse logOutResponse = mockMvc.perform(MockMvcRequestBuilders
+                        .post(String.format("/api/members/%s/logout", savedMemberDto.getId()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JsonConverter.toJsonString(loginDto)))
+                .andReturn()
+                .getResponse();
 
         // then
-        logoutResultActions
-                .andExpect(MockMvcResultMatchers.status().isOk());
+        assertEquals(HttpStatus.OK.value(), logOutResponse.getStatus());
 
     }
 
@@ -243,47 +199,42 @@ public class MemberControllerIntegrationTest {
         String nonExistedId = "nonExistedId";
 
         // when
-        ResultActions logInResultActions = mockMvc.perform(MockMvcRequestBuilders
-                .post(String.format("/api/members/%s/logout", nonExistedId))
-                .contentType(MediaType.APPLICATION_JSON));
+        MockHttpServletResponse expectedFailLogOutResponse = mockMvc.perform(MockMvcRequestBuilders
+                        .post(String.format("/api/members/%s/logout", nonExistedId))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andReturn()
+                .getResponse();
 
         // then
-        logInResultActions
-                .andExpect(MockMvcResultMatchers.status().is(HttpStatus.NOT_FOUND.value()));
+        assertEquals(HttpStatus.NOT_FOUND.value(), expectedFailLogOutResponse.getStatus());
 
     }
 
     @Test
     public void succeedToGetMember() throws Exception {
         // given
-        SignInDto signInDto = new SignInDto(
-                "testName",
-                "testNickName",
-                "2024-01-01",
-                "010-1234-5678",
-                null,
-                null
-        );
+        SignInDto signInDto = TestObjectGenerator.generateTestSignInDto();
 
         // when
-        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders
+        MockHttpServletResponse signInResponse = mockMvc.perform(MockMvcRequestBuilders
                         .post("/api/members/sign-in")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(JsonConverter.toJsonString(signInDto)))
-                .andReturn();
+                .andReturn()
+                .getResponse();
 
-        String savedMemberId = JsonConverter.toJsonNode(mvcResult.getResponse().getContentAsString())
-                .get("id")
-                .asText();
+        MemberDto savedMember = JsonConverter.parseJsonString(signInResponse.getContentAsString(), MemberDto.class);
 
-        ResultActions getMemberResultActions = mockMvc.perform(MockMvcRequestBuilders
-                .get(String.format("/api/members/%s", savedMemberId))
-                .contentType(MediaType.APPLICATION_JSON));
+        MockHttpServletResponse getMemberResponse = mockMvc.perform(MockMvcRequestBuilders
+                        .get(String.format("/api/members/%s", savedMember.getId()))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andReturn()
+                .getResponse();
+        MemberDto memberDto = JsonConverter.parseJsonString(getMemberResponse.getContentAsString(), MemberDto.class);
 
         // then
-        getMemberResultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(savedMemberId));
+        assertEquals(HttpStatus.OK.value(), getMemberResponse.getStatus());
+        assertEquals(savedMember.getId(), memberDto.getId());
 
     }
 
@@ -293,57 +244,50 @@ public class MemberControllerIntegrationTest {
         String nonExistedId = "nonExistedId";
 
         // when
-        ResultActions logInResultActions = mockMvc.perform(MockMvcRequestBuilders
-                .get(String.format("/api/members/%s", nonExistedId))
-                .contentType(MediaType.APPLICATION_JSON));
+        MockHttpServletResponse getMemberResponse = mockMvc.perform(MockMvcRequestBuilders
+                        .get(String.format("/api/members/%s", nonExistedId))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andReturn()
+                .getResponse();
 
         // then
-        logInResultActions
-                .andExpect(MockMvcResultMatchers.status().is(HttpStatus.NOT_FOUND.value()));
+        assertEquals(HttpStatus.NOT_FOUND.value(), getMemberResponse.getStatus());
 
     }
 
     @Test
     public void succeedToUpdateMember() throws Exception {
         // given
-        SignInDto signInDto = new SignInDto(
-                "testName",
-                "testNickName",
-                "2024-01-01",
-                "010-1234-5678",
-                null,
-                null
-        );
+        SignInDto signInDto = TestObjectGenerator.generateTestSignInDto();
 
         UpdateMemberDto updateMemberDto = new UpdateMemberDto(
                 "updatedNickname",
                 "010-1111-2222",
-                new ArrayList<>()
+                Arrays.asList("ST", "RW", "LW")
         );
 
         // when
-        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders
+        MockHttpServletResponse signInResponse = mockMvc.perform(MockMvcRequestBuilders
                         .post("/api/members/sign-in")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(JsonConverter.toJsonString(signInDto)))
-                .andReturn();
+                .andReturn()
+                .getResponse();
+        MemberDto savedMemberDto = JsonConverter.parseJsonString(signInResponse.getContentAsString(), MemberDto.class);
 
-        String savedMemberId = JsonConverter.toJsonNode(mvcResult.getResponse().getContentAsString())
-                .get("id")
-                .asText();
-
-        ResultActions updateMemberResultActions = mockMvc.perform(MockMvcRequestBuilders
-                .put(String.format("/api/members/%s", savedMemberId))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(JsonConverter.toJsonString(updateMemberDto)));
+        MockHttpServletResponse updateMemberResponse = mockMvc.perform(MockMvcRequestBuilders
+                        .put(String.format("/api/members/%s", savedMemberDto.getId()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JsonConverter.toJsonString(updateMemberDto)))
+                .andReturn()
+                .getResponse();
+        MemberDto updatedMemberDto = JsonConverter.parseJsonString(updateMemberResponse.getContentAsString(), MemberDto.class);
 
         // then
-        updateMemberResultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.nickname").value(updateMemberDto.getNickname()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.phoneNumber").value(updateMemberDto.getPhoneNumber()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.preferredPositions").value(updateMemberDto.getNickname()));
-        // TODO expect preferredPositions converting
+        assertEquals(HttpStatus.OK.value(), updateMemberResponse.getStatus());
+        assertEquals(updateMemberDto.getNickname(), updatedMemberDto.getNickname());
+        assertEquals(updateMemberDto.getPhoneNumber(), updatedMemberDto.getPhoneNumber());
+        assertEquals(updateMemberDto.getPreferredPositions(), updatedMemberDto.getPreferredPositions());
 
     }
 
@@ -359,14 +303,15 @@ public class MemberControllerIntegrationTest {
         );
 
         // when
-        ResultActions logInResultActions = mockMvc.perform(MockMvcRequestBuilders
-                .put(String.format("/api/members/%s", nonExistedId))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(JsonConverter.toJsonString(updateMemberDto)));
+        MockHttpServletResponse updateMemberResponse = mockMvc.perform(MockMvcRequestBuilders
+                        .put(String.format("/api/members/%s", nonExistedId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JsonConverter.toJsonString(updateMemberDto)))
+                .andReturn()
+                .getResponse();
 
         // then
-        logInResultActions
-                .andExpect(MockMvcResultMatchers.status().is(HttpStatus.NOT_FOUND.value()));
+        assertEquals(HttpStatus.NOT_FOUND.value(), updateMemberResponse.getStatus());
 
     }
 
