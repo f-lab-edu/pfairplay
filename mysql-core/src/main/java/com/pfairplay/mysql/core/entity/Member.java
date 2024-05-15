@@ -18,6 +18,12 @@ public class Member extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    @Column(name = "email", nullable = false)
+    private String email;
+
+    @Column(name = "password", nullable = false)
+    private String password;
+
     @Column(name = "name", nullable = false)
     private String name;
 
@@ -30,7 +36,6 @@ public class Member extends BaseEntity {
     @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
 
-
     @Column(name = "gender", nullable = false)
     @Enumerated(EnumType.STRING)
     private Gender gender = Gender.unknown;
@@ -38,11 +43,6 @@ public class Member extends BaseEntity {
     @Column(name = "preferred_positions", nullable = false)
     private String preferredPositions = "";
 
-    @Column(name = "access_token", nullable = false)
-    private String accessToken = "";
-
-    @Column(name = "refresh_token", nullable = false)
-    private String refreshToken = "";
 
     @OneToMany(mappedBy = "member")
     private List<MemberTeam> memberTeams = new ArrayList<>();
@@ -51,11 +51,6 @@ public class Member extends BaseEntity {
         this.phoneNumber = phoneNumber;
         this.nickname = nickname;
         this.preferredPositions = preferredPositions;
-    }
-
-    public void logout() {
-        this.accessToken = "";
-        this.refreshToken = "";
     }
 
 }

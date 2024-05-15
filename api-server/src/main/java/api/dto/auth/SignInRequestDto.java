@@ -1,4 +1,4 @@
-package api.dto.member;
+package api.dto.auth;
 
 import com.pfairplay.mysql.core.entity.Gender;
 import com.pfairplay.mysql.core.entity.Member;
@@ -16,8 +16,11 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SignInDto {
-
+public class SignInRequestDto {
+    @NotBlank(message = "이메일 작성해 주세요.")
+    private String email;
+    @NotBlank(message = "패스워드를 작성해 주세요.")
+    private String password;
     @NotBlank(message = "이름을 작성해 주세요.")
     private String name;
     @NotBlank(message = "닉네임을 작성해 주세요.")

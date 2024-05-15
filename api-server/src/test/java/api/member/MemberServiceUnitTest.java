@@ -2,7 +2,7 @@ package api.member;
 
 import api.common.exception.custom.DuplicateKeyException;
 import api.dto.member.MemberDto;
-import api.dto.member.SignInDto;
+import api.dto.auth.SignInRequestDto;
 import api.service.MemberService;
 import api.util.TestObjectGenerator;
 import com.pfairplay.mysql.core.entity.Member;
@@ -36,12 +36,12 @@ public class MemberServiceUnitTest {
     public void succeedToSignIn() {
         // given
         Member member = TestObjectGenerator.generateTestMemberEntity();
-        SignInDto signInDto = TestObjectGenerator.generateTestSignInDto();
+        SignInRequestDto signInRequestDto = TestObjectGenerator.generateTestSignInDto();
 
         when(memberRepository.save(any(Member.class))).thenReturn(member);
 
         // when
-        MemberDto memberDto = memberService.signIn(signInDto);
+        MemberDto memberDto = memberService.signIn(signInRequestDto);
 
         // then
         Assertions.assertEquals(memberDto.getId(), member.getId());
@@ -51,14 +51,14 @@ public class MemberServiceUnitTest {
     public void failedToSignInByDuplicatePhoneNumber() {
         // given
         Member member = TestObjectGenerator.generateTestMemberEntity();
-        SignInDto signInDto = TestObjectGenerator.generateTestSignInDto();
+        SignInRequestDto signInRequestDto = TestObjectGenerator.generateTestSignInDto();
         when(memberRepository.findByPhoneNumber(any(String.class))).thenReturn(Optional.of(member));
 
         // when
-        signInDto.setPhoneNumber(member.getPhoneNumber());
+        signInRequestDto.setPhoneNumber(member.getPhoneNumber());
 
         // then
-        assertThrows(DuplicateKeyException.class, () -> memberService.signIn(signInDto));
+        assertThrows(DuplicateKeyException.class, () -> memberService.signIn(signInRequestDto));
 
     }
 

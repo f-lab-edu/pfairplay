@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class LoginDto {
 
-    private final String phoneNumber;
+    private final String email;
+
+    private final String password;
 
 }

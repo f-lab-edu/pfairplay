@@ -2,7 +2,7 @@ package api.member;
 
 import api.dto.member.LoginDto;
 import api.dto.member.MemberDto;
-import api.dto.member.SignInDto;
+import api.dto.auth.SignInRequestDto;
 import api.dto.member.UpdateMemberDto;
 import api.util.JsonConverter;
 import api.util.TestObjectGenerator;
@@ -39,39 +39,39 @@ public class MemberControllerIntegrationTest {
     @Test
     public void succeedToSignIn() throws Exception {
         // given
-        SignInDto signInDto = TestObjectGenerator.generateTestSignInDto();
+        SignInRequestDto signInRequestDto = TestObjectGenerator.generateTestSignInDto();
 
 
         // when
         MockHttpServletResponse signInResponse = mockMvc.perform(MockMvcRequestBuilders
                         .post("/api/members/sign-in")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(JsonConverter.toJsonString(signInDto)))
+                        .content(JsonConverter.toJsonString(signInRequestDto)))
                 .andReturn()
                 .getResponse();
 
         // then
         MemberDto memberDto = JsonConverter.parseJsonString(signInResponse.getContentAsString(), MemberDto.class);
         assertEquals(HttpStatus.OK.value(), signInResponse.getStatus());
-        assertEquals(signInDto.getPhoneNumber(), memberDto.getPhoneNumber());
+        assertEquals(signInRequestDto.getPhoneNumber(), memberDto.getPhoneNumber());
     }
 
     @Test
     public void failedToSignInByDuplicatedPhoneNumber() throws Exception {
         // given
-        SignInDto signInDto = TestObjectGenerator.generateTestSignInDto();
-        SignInDto duplicatedPhoneNumberSignInDto = TestObjectGenerator.generateTestSignInDto();
+        SignInRequestDto signInRequestDto = TestObjectGenerator.generateTestSignInDto();
+        SignInRequestDto duplicatedPhoneNumberSignInRequestDto = TestObjectGenerator.generateTestSignInDto();
 
         // when
         mockMvc.perform(MockMvcRequestBuilders
                 .post("/api/members/sign-in")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(JsonConverter.toJsonString(signInDto)));
+                .content(JsonConverter.toJsonString(signInRequestDto)));
 
         MockHttpServletResponse expectedFailSignInResponse = mockMvc.perform(MockMvcRequestBuilders
                         .post("/api/members/sign-in")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(JsonConverter.toJsonString(duplicatedPhoneNumberSignInDto)))
+                        .content(JsonConverter.toJsonString(duplicatedPhoneNumberSignInRequestDto)))
                 .andReturn()
                 .getResponse();
 
@@ -83,13 +83,13 @@ public class MemberControllerIntegrationTest {
     @Test
     public void succeedToSignOut() throws Exception {
         // given
-        SignInDto signInDto = TestObjectGenerator.generateTestSignInDto();
+        SignInRequestDto signInRequestDto = TestObjectGenerator.generateTestSignInDto();
 
         // when
         MockHttpServletResponse signInResponse = mockMvc.perform(MockMvcRequestBuilders
                         .post("/api/members/sign-in")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(JsonConverter.toJsonString(signInDto)))
+                        .content(JsonConverter.toJsonString(signInRequestDto)))
                 .andReturn()
                 .getResponse();
         MemberDto savedMemberDto = JsonConverter.parseJsonString(signInResponse.getContentAsString(), MemberDto.class);
@@ -125,14 +125,14 @@ public class MemberControllerIntegrationTest {
     @Test
     public void succeedToLogIn() throws Exception {
         // given
-        SignInDto signInDto = TestObjectGenerator.generateTestSignInDto();
-        LoginDto loginDto = new LoginDto(signInDto.getPhoneNumber());
+        SignInRequestDto signInRequestDto = TestObjectGenerator.generateTestSignInDto();
+        LoginDto loginDto = new LoginDto(signInRequestDto.getPhoneNumber());
 
         // when
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/api/members/sign-in")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(JsonConverter.toJsonString(signInDto)))
+                        .content(JsonConverter.toJsonString(signInRequestDto)))
                 .andReturn()
                 .getResponse();
 
@@ -169,15 +169,15 @@ public class MemberControllerIntegrationTest {
     @Test
     public void succeedToLogout() throws Exception {
         // given
-        SignInDto signInDto = TestObjectGenerator.generateTestSignInDto();
+        SignInRequestDto signInRequestDto = TestObjectGenerator.generateTestSignInDto();
 
-        LoginDto loginDto = new LoginDto(signInDto.getPhoneNumber());
+        LoginDto loginDto = new LoginDto(signInRequestDto.getPhoneNumber());
 
         // when
         MockHttpServletResponse signInResponse = mockMvc.perform(MockMvcRequestBuilders
                         .post("/api/members/sign-in")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(JsonConverter.toJsonString(signInDto)))
+                        .content(JsonConverter.toJsonString(signInRequestDto)))
                 .andReturn()
                 .getResponse();
 
@@ -215,13 +215,13 @@ public class MemberControllerIntegrationTest {
     @Test
     public void succeedToGetMember() throws Exception {
         // given
-        SignInDto signInDto = TestObjectGenerator.generateTestSignInDto();
+        SignInRequestDto signInRequestDto = TestObjectGenerator.generateTestSignInDto();
 
         // when
         MockHttpServletResponse signInResponse = mockMvc.perform(MockMvcRequestBuilders
                         .post("/api/members/sign-in")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(JsonConverter.toJsonString(signInDto)))
+                        .content(JsonConverter.toJsonString(signInRequestDto)))
                 .andReturn()
                 .getResponse();
 
@@ -260,7 +260,7 @@ public class MemberControllerIntegrationTest {
     @Test
     public void succeedToUpdateMember() throws Exception {
         // given
-        SignInDto signInDto = TestObjectGenerator.generateTestSignInDto();
+        SignInRequestDto signInRequestDto = TestObjectGenerator.generateTestSignInDto();
 
         UpdateMemberDto updateMemberDto = new UpdateMemberDto(
                 "updatedNickname",
@@ -272,7 +272,7 @@ public class MemberControllerIntegrationTest {
         MockHttpServletResponse signInResponse = mockMvc.perform(MockMvcRequestBuilders
                         .post("/api/members/sign-in")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(JsonConverter.toJsonString(signInDto)))
+                        .content(JsonConverter.toJsonString(signInRequestDto)))
                 .andReturn()
                 .getResponse();
         MemberDto savedMemberDto = JsonConverter.parseJsonString(signInResponse.getContentAsString(), MemberDto.class);
