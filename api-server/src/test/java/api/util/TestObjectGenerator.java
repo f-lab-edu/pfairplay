@@ -1,7 +1,7 @@
 package api.util;
 
 import api.common.util.DateStringConverter;
-import api.dto.member.SignInDto;
+import api.dto.auth.SignInRequestDto;
 import com.pfairplay.mysql.core.entity.Gender;
 import com.pfairplay.mysql.core.entity.Member;
 
@@ -18,9 +18,9 @@ public class TestObjectGenerator {
         member.setPreferredPositions("RW");
         return member;
     }
-
-    public static SignInDto generateTestSignInDto() {
-        SignInDto signInDto = new SignInDto(
+    // TODO : 테스트 수정 필요
+    public static SignInRequestDto generateTestSignInDto() {
+        SignInRequestDto signInRequestDto = new SignInRequestDto(
                 "testName",
                 "testNickName",
                 "2024-01-01",
@@ -28,6 +28,6 @@ public class TestObjectGenerator {
                 null,
                 null
         );
-        return signInDto;
+        return signInRequestDto;
     }
 }

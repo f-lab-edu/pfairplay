@@ -1,11 +1,8 @@
 package api.controller;
 
-import api.dto.member.LoginDto;
 import api.dto.member.MemberDto;
 import api.dto.member.UpdateMemberDto;
-import api.dto.member.SignInDto;
 import api.service.MemberService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,26 +13,7 @@ public class MemberController {
 
     private final MemberService memberService;
 
-    @PostMapping("/sign-in")
-    public MemberDto signIn(@Valid @RequestBody SignInDto signInDto) {
-        return memberService.signIn(signInDto);
-    }
-
-    @PostMapping("/{id}/sign-out")
-    public void signOut(@PathVariable String id) {
-        memberService.signOut(id);
-    }
-
-    @PostMapping("/login")
-    public MemberDto login(@RequestBody LoginDto loginDto) {
-        return memberService.login(loginDto);
-    }
-
-    @PostMapping("/{id}/logout")
-    public void logout(@PathVariable String id) {
-        memberService.logout(id);
-    }
-
+    // TODO : 전체 메소드 JWT기반 Principal을 받아서 처리하도록 필요
     @GetMapping("/{id}")
     public MemberDto getMember(@PathVariable String id) {
         return memberService.getMember(id);
